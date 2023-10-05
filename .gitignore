@@ -1,0 +1,7 @@
+*.log
+*.db
+instance
+.vscode/
+.venv
+*.flaskenv
+config.py
