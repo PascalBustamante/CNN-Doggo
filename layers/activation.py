@@ -9,9 +9,9 @@ class Activation(Layer):
 
     def forward(self, inputs):
         self.inputs = inputs
-        self. output = self.actication_function(inputs)
+        self.output = self.actication_function(inputs)
         return self.output
-    
+
     def backward(self, gradients):
-        self.dinputs = gradients*self.actication_function.derivative(self.inputs)
+        self.dinputs = gradients * self.actication_function.derivative(self.inputs)
         return self.dinputs

@@ -12,7 +12,7 @@ class DenseLayer(Layer):
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
         return self.output
-    
+
     def backward(self, gradients):
         self.dweights = np.dot(self.inputs.T, gradients)
         self.dbiases = np.sum(gradients, axis=0)

@@ -4,14 +4,18 @@ from layer import Layer
 
 
 class ConvLayer(Layer):
-    def __init__(self, input_channels, output_channels, filter_size, stride=1, padding=0):
+    def __init__(
+        self, input_channels, output_channels, filter_size, stride=1, padding=0
+    ):
         super(ConvLayer, self).__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.filter_size = filter_size
         self.stride = stride
         self.padding = padding
-        self.weights = np.random.randn(filter_size, filter_size, input_channels, output_channels)
+        self.weights = np.random.randn(
+            filter_size, filter_size, input_channels, output_channels
+        )
         self.biases = np.zeros(output_channels)
 
     def forward(self, inputs):
@@ -20,16 +24,28 @@ class ConvLayer(Layer):
         out_width = (width - self.filter_size + 2 * self.padding) // self.stride + 1
 
         self.inputs = inputs
-        self.output = np.zeros((batch_size, out_height, out_width, self.output_channels))
+        self.output = np.zeros(
+            (batch_size, out_height, out_width, self.output_channels)
+        )
 
         for i in range(batch_size):
             for h in range(out_height):
                 for w in range(out_width):
                     for c in range(self.output_channels):
-                        self.output[i, h, w, c] = np.sum(
-                            inputs[i, h*self.stride:h*self.stride+self.filter_size, w*self.stride:w*self.stride+self.filter_size, :]
-                            * self.weights[:, :, :, c]
-                        ) + self.biases[c]
+                        self.output[i, h, w, c] = (
+                            np.sum(
+                                inputs[
+                                    i,
+                                    h * self.stride : h * self.stride
+                                    + self.filter_size,
+                                    w * self.stride : w * self.stride
+                                    + self.filter_size,
+                                    :,
+                                ]
+                                * self.weights[:, :, :, c]
+                            )
+                            + self.biases[c]
+                        )
 
         return self.output
 
@@ -45,8 +61,23 @@ class ConvLayer(Layer):
             for h in range(out_height):
                 for w in range(out_width):
                     for c in range(out_channels):
-                        self.dweights[:, :, :, c] += self.inputs[i, h*self.stride:h*self.stride+self.filter_size, w*self.stride:w*self.stride+self.filter_size, :] * gradients[i, h, w, c]
+                        self.dweights[:, :, :, c] += (
+                            self.inputs[
+                                i,
+                                h * self.stride : h * self.stride + self.filter_size,
+                                w * self.stride : w * self.stride + self.filter_size,
+                                :,
+                            ]
+                            * gradients[i, h, w, c]
+                        )
                         self.dbiases[c] += gradients[i, h, w, c]
-                        self.dinputs[i, h*self.stride:h*self.stride+self.filter_size, w*self.stride:w*self.stride+self.filter_size, :] += self.weights[:, :, :, c] * gradients[i, h, w, c]
+                        self.dinputs[
+                            i,
+                            h * self.stride : h * self.stride + self.filter_size,
+                            w * self.stride : w * self.stride + self.filter_size,
+                            :,
+                        ] += (
+                            self.weights[:, :, :, c] * gradients[i, h, w, c]
+                        )
 
         return self.dinputs
