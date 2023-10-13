@@ -5,8 +5,15 @@ from torch .utils.data import DataLoader, Dataset
 from torchvision import transforms
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import numpy as np
+import random
+import timeit
+from tqdm import tqdm
 
 
+RANDOM_SEED = 42
+BATCH_SIZE = 512
+EPOCHS = 40
 LEARNING_RATE = 1E-4
 NUM_CLASSES = 10
 PATCH_SIZE = 4
@@ -21,6 +28,14 @@ ACTIVAITION = "gelu"
 NUM_ENCODERS = 4
 EMBED_DIM = (PATCH_SIZE ** 2) * IN_CHANNELS
 NUM_PATCHES = (IMG_SIZE // PATCH_SIZE) ** 2 
+
+random.seed(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
+torch.manual_seed(RANDOM_SEED)
+torch.cuda.manual_seed(RANDOM_SEED)
+torch.cuda.manual_seed_all(RANDOM_SEED)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -82,3 +97,8 @@ class ViT(nn.Module):
 #print(model(x).shape)
 
 
+train_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\MNIST\train.csv")
+test_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\MNIST\test.csv")
+submission_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\MNIST\sample_submission.csv")
+
+print(train_df.head())
