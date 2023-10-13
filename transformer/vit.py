@@ -1,5 +1,10 @@
 import torch
-from torch import nn
+from torch import nn, optim
+import pandas as pd
+from torch .utils.data import DataLoader, Dataset
+from torchvision import transforms
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 
 LEARNING_RATE = 1E-4
@@ -42,6 +47,7 @@ class PatchEmbedding(nn.Module):
 
         x = self.patcher(x).permute(0,2,1)
         x = torch.cat([cls_token, x], dim=1)
+        x = self.positoin_embeddings + x
         x = self.dropout(x)
         return x
     
@@ -71,6 +77,8 @@ class ViT(nn.Module):
         x = self.mlp_head(x[:, 0, :])
         return x 
     
-model = ViT(NUM_PATCHES, IMG_SIZE, NUM_CLASSES, PATCH_SIZE, EMBED_DIM, NUM_ENCODERS, NUM_HEADS, HIDDEN_DIM, DROPOUT, ACTIVAITION, IN_CHANNELS).to(device)
-x = torch.randn(512, 1, 28, 28).to(device)
-print(model(x).shape)
+#model = ViT(NUM_PATCHES, IMG_SIZE, NUM_CLASSES, PATCH_SIZE, EMBED_DIM, NUM_ENCODERS, NUM_HEADS, HIDDEN_DIM, DROPOUT, ACTIVAITION, IN_CHANNELS).to(device)
+#x = torch.randn(512, 1, 28, 28).to(device)
+#print(model(x).shape)
+
+
