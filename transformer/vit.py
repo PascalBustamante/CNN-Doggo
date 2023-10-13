@@ -7,6 +7,7 @@ NUM_CLASSES = 10
 PATCH_SIZE = 4
 IMG_SIZE = 28
 IN_CHANNELS = 1
+NUM_HEADS = 8
 DROPOUT = 0.001
 HIDDEN_DIM = 768
 ADAM_WEIGHT_DECAY = 0
@@ -71,4 +72,5 @@ class ViT(nn.Module):
         return x 
     
 model = ViT(NUM_PATCHES, IMG_SIZE, NUM_CLASSES, PATCH_SIZE, EMBED_DIM, NUM_ENCODERS, NUM_HEADS, HIDDEN_DIM, DROPOUT, ACTIVAITION, IN_CHANNELS).to(device)
-x = torch()
+x = torch.randn(512, 1, 28, 28).to(device)
+print(model(x).shape)
