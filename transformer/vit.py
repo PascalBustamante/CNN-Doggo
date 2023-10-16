@@ -92,7 +92,7 @@ class ViT(nn.Module):
         x = self.mlp_head(x[:, 0, :])
         return x 
     
-#model = ViT(NUM_PATCHES, IMG_SIZE, NUM_CLASSES, PATCH_SIZE, EMBED_DIM, NUM_ENCODERS, NUM_HEADS, HIDDEN_DIM, DROPOUT, ACTIVAITION, IN_CHANNELS).to(device)
+model = ViT(NUM_PATCHES, IMG_SIZE, NUM_CLASSES, PATCH_SIZE, EMBED_DIM, NUM_ENCODERS, NUM_HEADS, HIDDEN_DIM, DROPOUT, ACTIVAITION, IN_CHANNELS).to(device)
 #x = torch.randn(512, 1, 28, 28).to(device)
 #print(model(x).shape)
 
@@ -176,7 +176,6 @@ class MNISTSubmitDataset(Dataset):
 
     def __getitem__(self, index):
         image = self.images[index].reshape((28, 28)).astype(np.uint8)
-        label = self.labels[index]
         index = self.indicies[index]
         image = self.transform(image)
 
@@ -197,17 +196,92 @@ print("-"*30)
 val_dataset = MNISTValDataset(val_df.iloc[:, 1:].values.astype(np.uint8), val_df.iloc[:, 0].values, val_df.index.values) ##ommit label
 print(len(val_dataset))
 print(val_dataset[0])
-axarr[0].imshow(val_dataset[0]["image"].squeeze(), cmap="gray")
-axarr[0].set_title("Val Image")
+axarr[1].imshow(val_dataset[0]["image"].squeeze(), cmap="gray")
+axarr[1].set_title("Val Image")
 print("-"*30)
 
 
 test_dataset = MNISTSubmitDataset(test_df.values.astype(np.uint8), test_df.index.values) ##ommit label
 print(len(test_dataset))
 print(test_dataset[0])
-axarr[0].imshow(test_dataset[0]["image"].squeeze(), cmap="gray")
-axarr[0].set_title("test Image")
+axarr[2].imshow(test_dataset[0]["image"].squeeze(), cmap="gray")
+axarr[2].set_title("test Image")
 print("-"*30)
 
 
 plt.show()
+
+
+train_dataloader = DataLoader(dataset = train_dataset,
+                              batch_size=BATCH_SIZE,
+                              shuffle=True)
+
+
+val_dataloader = DataLoader(dataset = val_dataset,
+                              batch_size=BATCH_SIZE,
+                              shuffle=True)
+
+
+test_dataloader = DataLoader(dataset = test_dataset,
+                              batch_size=BATCH_SIZE,
+                              shuffle=False)
+
+
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), betas=ADAM_BETAS, lr=LEARNING_RATE, weight_decay=ADAM_WEIGHT_DECAY)
+
+start = timeit.default_timer()
+for epoch in tqdm(range(EPOCHS), position=0, leave=True):
+    model.train()
+    train_labels=[]
+    train_preds=[]
+    train_running_loss=0
+    for idx, img_label in enumerate(tqdm(train_dataloader, position=0, leave=True)):
+        img = img_label["image"].float().to(device)
+        label = img_label["label"].type(torch.uint8).to(device)
+        y_pred = model(img)
+        y_pred_label = torch.argmax(y_pred, dim=1)
+
+        train_labels.extend(label.cpu().detach())
+        train_preds.extend(y_pred_label.cpu().detach())
+
+        loss = criterion(y_pred, label)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        train_running_loss += loss.item()
+    train_loss = train_running_loss / (idx+1)
+
+    model.eval()
+    val_labels = []
+    val_preds = []
+    val_running_loss = 0
+    with torch.no_grad():
+        for idx, img_label in enumerate(tqdm(val_dataloader, position=0, leave=True)):
+            img = img_label["image"].float().to(device)
+            label = img_label["label"].type(torch.uint8).to(device)
+            y_pred = model(img)
+            y_pred_label = torch.argmax(y_pred, dim=1)
+
+            val_labels.extend(label.cpu().detach())
+            val_preds.extend(y_pred_label.cpu().detach())
+
+            loss = criterion(y_pred, label)
+            val_running_loss += loss.item()
+    val_loss = val_running_loss / (idx+1)
+
+    print("-"*30)
+    print(f"Train Loss EPOCH {epoch+1}: {train_loss:.4f}")
+    print(f"Validation Loss EPOCH {epoch+1}: {val_loss:.4f}")
+    print(f"Train Accuracy EPOCH {epoch+1}: {sum(1 for x,y in zip(train_preds, train_labels) if x == y) / len(train_labels):.4f}")
+    print(f"Validation Accuracy EPOCH {epoch+1}: {sum(1 for x,y in zip(val_preds, val_labels) if x == y) / len(val_labels):.4f}")
+    print("-"*30)
+
+
+stop = timeit.default_timer()
+print(f"Training Time: {stop-start:.2f}s")
+
+torch.cuda.empty_cache()
+
