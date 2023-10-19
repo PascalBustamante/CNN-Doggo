@@ -15,10 +15,10 @@ RANDOM_SEED = 42
 BATCH_SIZE = 512
 EPOCHS = 40
 LEARNING_RATE = 1E-4
-NUM_CLASSES = 10
+NUM_CLASSES = 10     #for the 1- digits
 PATCH_SIZE = 4
 IMG_SIZE = 28
-IN_CHANNELS = 1
+IN_CHANNELS = 1      #1 because MNIST is gray scale 
 NUM_HEADS = 8
 DROPOUT = 0.001
 HIDDEN_DIM = 768
@@ -107,7 +107,7 @@ submission_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\MNIST\sample_submission.c
 train_df, val_df = train_test_split(train_df, test_size=0.1, random_state=RANDOM_SEED, shuffle=True)
 
 
-class MNISTTrainDataset(Dataset):
+class MNISTTrainDataset(Dataset):      ##change it to doggos DS
     def __init__(self, images, labels, indicies):
         super().__init__()
         self.images = images
@@ -125,7 +125,7 @@ class MNISTTrainDataset(Dataset):
         return len(self.images)
     
 
-    def __getitem__(self, index):
+    def __getitem__(self, index):        ##this would have to change for it to take coloured images
         image = self.images[index].reshape((28, 28)).astype(np.uint8)
         label = self.labels[index]
         index = self.indicies[index]
