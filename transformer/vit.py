@@ -14,11 +14,19 @@ from tqdm import tqdm
 RANDOM_SEED = 42
 BATCH_SIZE = 512
 EPOCHS = 40
+<<<<<<< HEAD
 LEARNING_RATE = 1e-4
 NUM_CLASSES = 10  # for the 1- digits
 PATCH_SIZE = 4
 IMG_SIZE = 28
 IN_CHANNELS = 1  # 1 because MNIST is gray scale
+=======
+LEARNING_RATE = 1E-4
+NUM_CLASSES = 10     #for the 1- digits
+PATCH_SIZE = 4
+IMG_SIZE = 28
+IN_CHANNELS = 1      #1 because MNIST is gray scale 
+>>>>>>> dad2c1da0521503b8c09c08b2cce9b51e8d1b8a7
 NUM_HEADS = 8
 DROPOUT = 0.001
 HIDDEN_DIM = 768
@@ -148,7 +156,11 @@ train_df, val_df = train_test_split(
 )
 
 
+<<<<<<< HEAD
 class MNISTTrainDataset(Dataset):  ##change it to doggos DS
+=======
+class MNISTTrainDataset(Dataset):      ##change it to doggos DS
+>>>>>>> dad2c1da0521503b8c09c08b2cce9b51e8d1b8a7
     def __init__(self, images, labels, indicies):
         super().__init__()
         self.images = images
@@ -166,9 +178,13 @@ class MNISTTrainDataset(Dataset):  ##change it to doggos DS
     def __len__(self):
         return len(self.images)
 
+<<<<<<< HEAD
     def __getitem__(
         self, index
     ):  ##this would have to change for it to take coloured images
+=======
+    def __getitem__(self, index):        ##this would have to change for it to take coloured images
+>>>>>>> dad2c1da0521503b8c09c08b2cce9b51e8d1b8a7
         image = self.images[index].reshape((28, 28)).astype(np.uint8)
         label = self.labels[index]
         index = self.indicies[index]
