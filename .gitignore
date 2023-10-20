@@ -5,3 +5,4 @@ instance
 .venv
 *.flaskenv
 config.py
+data/
