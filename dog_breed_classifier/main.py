@@ -6,7 +6,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import random_split
 
 from models.model import ViT
-from utils.data_loading import DataLoaderManager
+from utils.data_loading import DataLoaderManager, create_dog_breed_enum
 from train.train import Trainer
 
 
@@ -47,6 +47,10 @@ transform = transforms.Compose([
 # Load the dataset
 train_val_df = datasets.ImageFolder(root=r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\train", transform=transform)
 test_df = datasets.ImageFolder(root=r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\test", transform=transform)
+breed_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\labels.csv", usecols=["breed"])
+
+breeds_list = breed_df["breed"].tolist()
+breeds = create_dog_breed_enum(breeds_list)
 
 # Split the dataset
 lengths = [int(0.9 * len(train_val_df)), len(train_val_df) - int(0.9 * len(train_val_df))]
