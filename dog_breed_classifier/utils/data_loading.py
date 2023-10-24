@@ -45,8 +45,6 @@ class DataLoaderManager:
         self.test_dataloader = DataLoader(
             dataset=test_dataset, batch_size=self.batch_size, shuffle=False
         )
-        # return self.train_dataloader, self.val_dataloader, self.test_dataloader
 
     def get_dataloaders(self):
         return self.train_dataloader, self.val_dataloader, self.test_dataloader
-
