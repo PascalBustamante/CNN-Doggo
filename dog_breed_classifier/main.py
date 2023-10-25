@@ -1,12 +1,14 @@
 import torch
 import random
+import glob
 import numpy as np
 import pandas as pd
 from torchvision import datasets, transforms
-from torch.utils.data import random_split
+from torch.utils.data import DataLoader, Dataset, random_split
+
 
 from models.model import ViT
-from utils.data_loading import DataLoaderManager, create_dog_breed_enum
+from utils.data_loading import DataLoaderManager, DOGGOTrainDataset, create_dog_breed_enum
 from train.train import Trainer
 
 
@@ -45,16 +47,24 @@ transform = transforms.Compose([
 ])
 
 # Load the dataset
-train_val_df = datasets.ImageFolder(root=r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\train", transform=transform)
-test_df = datasets.ImageFolder(root=r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\test", transform=transform)
-breed_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\labels.csv", usecols=["breed"])
+#train_val_df = datasets.ImageFolder(root=r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\train", transform=transform)
+#test_df = datasets.ImageFolder(root=r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\test", transform=transform)
 
-breeds_list = breed_df["breed"].tolist()
+image_files_train_val = glob.glob(r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\train/*.jpg")
+image_files_test = glob.glob(r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\test/*.jpg")
+labels_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\labels.csv")
+
+breeds_list = labels_df["breed"].unique().tolist()
+id_to_breed = dict(zip(labels_df["id"], labels_df["breed"]))
 breeds = create_dog_breed_enum(breeds_list)
 
 # Split the dataset
-lengths = [int(0.9 * len(train_val_df)), len(train_val_df) - int(0.9 * len(train_val_df))]
-train_df, val_df = random_split(train_val_df, lengths)
+lengths = [int(0.9 * len(image_files_train_val)), len(image_files_train_val) - int(0.9 * len(image_files_train_val))]
+image_files_train, image_files_val = random_split(image_files_train_val, lengths)
 
 
 model = ViT(NUM_PATCHES, IMG_SIZE, NUM_CLASSES, PATCH_SIZE, EMBED_DIM, NUM_ENCODERS, NUM_HEADS, HIDDEN_DIM, DROPOUT, ACTIVAITION, IN_CHANNELS).to(device)
+
+train_dataset = DOGGOTrainDataset(image_files=image_files_train, id_to_breed=id_to_breed)
+
+train_dataloader = DataLoader(dataset=train_dataset,batch_size=BATCH_SIZE,shuffle=True)

@@ -1,4 +1,5 @@
 import torch
+import os
 from torch import nn, optim
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset, random_split
@@ -52,29 +53,32 @@ class DataLoaderManager:
 
 
 class DOGGOTrainDataset(Dataset):
-    def __init__(self, image_paths, labels):
+    def __init__(self, image_files, id_to_breed):
         super().__init__()
-        self.image_paths = image_paths
-        self.labels, self.label_indicies = torch.unique(labels, return_inverse=True)
+        self.image_files = image_files
+        self.id_to_breed = id_to_breed
+        #self.labels, self.label_indicies = torch.unique(labels, return_inverse=True)
         
         self.transform = transforms.Compose(
             [
+                transforms.ToPILImage(),
+                transforms.RandomRotation(15),
                 transforms.Resize((224,224)),
-                #transforms.ToPILImage(),
-                #transforms.RandomRotation(15),
                 transforms.ToTensor(),
                 transforms.Normalize([0.5], [0.5]),
             ]
         )
 
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.image_files)
 
     def __getitem__(
         self, index
     ):  ##this would have to change for it to take coloured images
-        image = Image.open(self.image_paths[index]).convert("RGB")
-        label = self.labels[index]
+        image = Image.open(self.image_files[index]).convert("RGB")
+        image_id = os.path.splitext(os.path.basename(self.image_files[index]))[0]
+        #label = self.labels[index]
+        label = self.id_to_breed[image_id]
         image = self.transform(image)
 
         return {"image": image, "label": label}
