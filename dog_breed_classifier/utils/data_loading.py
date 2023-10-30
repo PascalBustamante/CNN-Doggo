@@ -37,7 +37,7 @@ class DataLoaderManager:
                 transforms.ToTensor(),
                 transforms.Normalize(self.mean, self.std),
             ])
-            dataset = DOGGOTrainDataset(self.train_files, self.id_to_breed, transform=transform)
+            dataset = DOGGODataset(self.train_files, self.id_to_breed, dataset_type='train', transform=transform)
 
         elif dataset_type in ['val', 'test']:
             transform = transforms.Compose([
@@ -47,9 +47,9 @@ class DataLoaderManager:
                 transforms.Normalize(self.mean, self.std),
             ])
             if dataset_type == 'val':
-                dataset = DOGGOValDataset(self.val_files, self.id_to_breed, transform=transform)
+                dataset = DOGGODataset(self.val_files, self.id_to_breed, dataset_type='val', transform=transform)
             else:
-                dataset = DOGGOTestDataset(self.test_files, self.id_to_breed, transform=transform)
+                dataset = DOGGODataset(self.test_files, self.id_to_breed, dataset_type='test', transform=transform)
 
         else:
             raise ValueError("dataset_type should be 'train', 'val', or 'test'")
