@@ -13,61 +13,92 @@ from tqdm import tqdm
 from PIL import Image
 from enum import Enum, auto
 
+from utils.data_exploration import calculate_mean_std
+
 class DataLoaderManager:
-    def __init__(
-        self, batch_size, dataset, train_ratio=0.7, val_ratio=0.15, test_ratio=0.15
-    ):
+    def __init__(self, batch_size, train_files, val_files, test_files, id_to_breed):
         self.batch_size = batch_size
-        self.dataset = dataset
-        self.train_ratio = train_ratio
-        self.test_ratio = test_ratio
-        self.val_ratio = val_ratio
-        self.train_dataloader = None
-        self.val_dataloader = None
-        self.test_dataloader = None
+        self.train_files = train_files
+        self.val_files = val_files
+        self.test_files = test_files
+        self.id_to_breed = id_to_breed
+        self.mean, self.std = self.calculate_mean_std(self.train_files)
 
-    def split_data(self):
-        total_size = len(self.dataset)
-        train_size = int(total_size * self.train_ratio)
-        val_size = int(total_size * self.val_ratio)
-        test_size = total_size - train_size - val_size
-        train_dataset, val_dataset, test_dataset = random_split(
-            self.dataset, [train_size, val_size, test_size]
-        )
-        return train_dataset, val_dataset, test_dataset
+    def calculate_mean_std(self, image_files):
+        #function from utils
+        return calculate_mean_std(image_files)
+    
+    def get_dataloader(self, dataset_type):
+        if dataset_type == 'train':
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.RandomRotation(15),
+                transforms.Resize((224,224)),
+                transforms.ToTensor(),
+                transforms.Normalize(self.mean, self.std),
+            ])
+            dataset = DOGGOTrainDataset(self.train_files, self.id_to_breed, transform=transform)
 
-    def create_dataloaders(self):
-        train_dataset, val_dataset, test_dataset = self.split_data()
-        self.train_dataloader = DataLoader(
-            dataset=train_dataset, batch_size=self.batch_size, shuffle=True
-        )
-        self.val_dataloader = DataLoader(
-            dataset=val_dataset, batch_size=self.batch_size, shuffle=True
-        )
-        self.test_dataloader = DataLoader(
-            dataset=test_dataset, batch_size=self.batch_size, shuffle=False
-        )
+        elif dataset_type in ['val', 'test']:
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize((224,224)),
+                transforms.ToTensor(),
+                transforms.Normalize(self.mean, self.std),
+            ])
+            if dataset_type == 'val':
+                dataset = DOGGOValDataset(self.val_files, self.id_to_breed, transform=transform)
+            else:
+                dataset = DOGGOTestDataset(self.test_files, self.id_to_breed, transform=transform)
 
-    def get_dataloaders(self):
-        return self.train_dataloader, self.val_dataloader, self.test_dataloader
+        else:
+            raise ValueError("dataset_type should be 'train', 'val', or 'test'")
 
+        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        return dataloader
+
+
+
+class DOGGODataset(Dataset):
+    def __init__(self, image_files, id_to_breed, dataset_type, transform=None):
+        super().__init__()
+        self.image_files = image_files
+        self.id_to_breed = id_to_breed
+        self.dataset_type = dataset_type
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.image_files)
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image_id = os.path.splitext(os.path.basename(image_file))[0]
+        
+        image = Image.open(image_file)
+        if self.transform:
+            image = self.transform(image)
+
+        if self.dataset_type == 'test':
+            return image
+        else:
+            breed = self.id_to_breed[image_id]
+            return image, breed
+
+
+def create_dog_breed_enum(breeds):
+    return Enum("Dog Breed", {breed.upper(): i for i, breed in enumerate(breeds, start=1)})
+
+"""
+old classes here for reference
 
 class DOGGOTrainDataset(Dataset):
-    def __init__(self, image_files, id_to_breed):
+    def __init__(self, image_files, id_to_breed, transform):
         super().__init__()
         self.image_files = image_files
         self.id_to_breed = id_to_breed
         #self.labels, self.label_indicies = torch.unique(labels, return_inverse=True)
         
-        self.transform = transforms.Compose(
-            [
-                transforms.ToPILImage(),
-                transforms.RandomRotation(15),
-                transforms.Resize((224,224)),
-                transforms.ToTensor(),
-                transforms.Normalize([0.5], [0.5]),
-            ]
-        )
+        self.transform = transform
 
     def __len__(self):
         return len(self.image_files)
@@ -84,7 +115,7 @@ class DOGGOTrainDataset(Dataset):
         return {"image": image, "label": label}
     
 
-class DOGGOTrainDataset(Dataset):
+class DOGGOValDataset(Dataset):
     def __init__(self, image_files, id_to_breed):
         super().__init__()
         self.image_files = image_files
@@ -116,7 +147,7 @@ class DOGGOTrainDataset(Dataset):
         return {"image": image, "label": label}
 
 
-class DOGGOTrainDataset(Dataset):
+class DOGGOTestDataset(Dataset):
     def __init__(self, image_files, id_to_breed):
         super().__init__()
         self.image_files = image_files
@@ -146,8 +177,4 @@ class DOGGOTrainDataset(Dataset):
         image = self.transform(image)
 
         return {"image": image, "label": label}
-
-
-
-def create_dog_breed_enum(breeds):
-    return Enum("Dog Breed", {breed.upper(): i for i, breed in enumerate(breeds, start=1)})
+"""

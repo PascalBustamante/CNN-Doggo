@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 
 
 from models.model import ViT
-from utils.data_loading import DataLoaderManager, DOGGOTrainDataset, create_dog_breed_enum
+from utils.data_loading import DataLoaderManager, DOGGOTrainDataset, create_dog_breed_enum, calculate_mean_std
 from train.train import Trainer
 
 
@@ -61,6 +61,9 @@ breeds = create_dog_breed_enum(breeds_list)
 # Split the dataset
 lengths = [int(0.9 * len(image_files_train_val)), len(image_files_train_val) - int(0.9 * len(image_files_train_val))]
 image_files_train, image_files_val = random_split(image_files_train_val, lengths)
+
+#calculate mean and std of train set
+mean, std = calculate_mean_std(image_files_train)
 
 
 model = ViT(NUM_PATCHES, IMG_SIZE, NUM_CLASSES, PATCH_SIZE, EMBED_DIM, NUM_ENCODERS, NUM_HEADS, HIDDEN_DIM, DROPOUT, ACTIVAITION, IN_CHANNELS).to(device)
