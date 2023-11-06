@@ -19,7 +19,8 @@ class PatchEmbedding(nn.Module):
                 in_channels=in_channels,
                 out_channels=embed_dim,
                 kernel_size=patch_size,
-                stride=patch_size,
+                stride=1,
+                padding=0
             ),
             nn.Flatten(2),
         )
@@ -36,6 +37,10 @@ class PatchEmbedding(nn.Module):
 
         x = self.patcher(x).permute(0, 2, 1)
         x = torch.cat([cls_token, x], dim=1)
+        print(cls_token.shape)
+        print(x.shape)
+
+        #print(x.size(),self.positoin_embeddings.size())
         x = self.positoin_embeddings + x
         x = self.dropout(x)
         return x

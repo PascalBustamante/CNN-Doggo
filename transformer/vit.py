@@ -136,9 +136,9 @@ model = ViT(
 # print(model(x).shape)
 
 
-train_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\MNIST\train.csv")
-test_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\MNIST\test.csv")
-submission_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\MNIST\sample_submission.csv")
+train_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\MNIST\train.csv")
+test_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\MNIST\test.csv")
+submission_df = pd.read_csv(r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\MNIST\sample_submission.csv")
 
 # print(train_df.head())
 
@@ -287,6 +287,7 @@ for epoch in tqdm(range(EPOCHS), position=0, leave=True):
     for idx, img_label in enumerate(tqdm(train_dataloader, position=0, leave=True)):
         img = img_label["image"].float().to(device)
         label = img_label["label"].type(torch.uint8).to(device)
+        print(label, "yoo")
         y_pred = model(img)
         y_pred_label = torch.argmax(y_pred, dim=1)
 
@@ -309,6 +310,7 @@ for epoch in tqdm(range(EPOCHS), position=0, leave=True):
     with torch.no_grad():
         for idx, img_label in enumerate(tqdm(val_dataloader, position=0, leave=True)):
             img = img_label["image"].float().to(device)
+            #print(img, "look here")
             label = img_label["label"].type(torch.uint8).to(device)
             y_pred = model(img)
             y_pred_label = torch.argmax(y_pred, dim=1)

@@ -47,7 +47,9 @@ class Trainer:
         for idx, img_label in enumerate(
             tqdm(self.train_dataloader, position=0, leave=True)
         ):
+            print(img_label["label"])
             img = img_label["image"].float().to(self.device)
+            #print(img)
             label = img_label["label"].type(torch.uint8).to(self.device)
             y_pred = self.model(img)
             y_pred_label = torch.argmax(y_pred, dim=1)

@@ -15,6 +15,7 @@ class TestPatchEmbedding(unittest.TestCase):
         self.assertEqual(output.size(1), self.patch_embedding.num_patches)
         self.assertEqual(output.size(2), self.patch_embedding.dim)
 
+
 class TestViT(unittest.TestCase):
     def setUp(self):
         self.vit = ViT(
