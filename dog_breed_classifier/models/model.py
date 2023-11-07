@@ -20,7 +20,7 @@ class PatchEmbedding(nn.Module):
                 out_channels=embed_dim,
                 kernel_size=patch_size,
                 stride=patch_size,
-                padding=0
+                padding=0,
             ),
             nn.Flatten(2),
         )
@@ -28,21 +28,21 @@ class PatchEmbedding(nn.Module):
             torch.randn(size=(1, 1, embed_dim)), requires_grad=True
         )
         self.positoin_embeddings = nn.Parameter(
-            torch.randn(size=(1, num_patches+1, embed_dim)), requires_grad=True
+            torch.randn(size=(1, num_patches + 1, embed_dim)), requires_grad=True
         )
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
-        #print("x here is,", x.shape)
+        # print("x here is,", x.shape)
         cls_token = self.cls_token.expand(x.shape[0], -1, -1)
-        #print("cls_token size:", cls_token.shape)
+        # print("cls_token size:", cls_token.shape)
 
         x = self.patcher(x).permute(0, 2, 1)
-        #print("x after patcher,", x.shape)
+        # print("x after patcher,", x.shape)
         x = torch.cat([cls_token, x], dim=1)
-        #print("x size after concatenation:", x.shape)
+        # print("x size after concatenation:", x.shape)
 
-        #print(x.size(),self.positoin_embeddings.size())
+        # print(x.size(),self.positoin_embeddings.size())
         x = self.positoin_embeddings + x
         x = self.dropout(x)
         return x

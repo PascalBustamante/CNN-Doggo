@@ -14,13 +14,14 @@ from train.train import Trainer
 
 
 RANDOM_SEED = 42
+NUM_WORKERS = 8  # number of CPU cores for parallel data loading
 BATCH_SIZE = 16
 EPOCHS = 40
 LEARNING_RATE = 1e-4
-NUM_CLASSES = 121  
+NUM_CLASSES = 121
 PATCH_SIZE = 16
 IMG_SIZE = 224
-IN_CHANNELS = 3 
+IN_CHANNELS = 3
 NUM_HEADS = 8
 DROPOUT = 0.001
 HIDDEN_DIM = 768
@@ -91,6 +92,7 @@ DM = DataLoaderManager(
     val_files=image_files_val,
     test_files=image_files_test,
     id_to_breed=id_to_breed,
+    num_workers=NUM_WORKERS,
 )
 
 train_dataloader = DM.get_dataloader("train")

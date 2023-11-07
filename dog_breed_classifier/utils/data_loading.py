@@ -17,12 +17,15 @@ from utils.data_exploration import calculate_mean_std
 
 
 class DataLoaderManager:
-    def __init__(self, batch_size, train_files, val_files, test_files, id_to_breed):
+    def __init__(
+        self, batch_size, train_files, val_files, test_files, id_to_breed, num_workers
+    ):
         self.batch_size = batch_size
         self.train_files = train_files
         self.val_files = val_files
         self.test_files = test_files
         self.id_to_breed = id_to_breed
+        self.num_workers = num_workers
         self.mean, self.std = self.calculate_mean_std(self.train_files)
 
     def calculate_mean_std(self, image_files):
@@ -32,6 +35,7 @@ class DataLoaderManager:
     ##build get_dataset(self, dataset_type)
 
     def get_dataloader(self, dataset_type):
+        shuffle = True
         if dataset_type == "train":
             transform = transforms.Compose(
                 [
@@ -66,6 +70,7 @@ class DataLoaderManager:
                     transform=transform,
                 )
             else:
+                shuffle = False
                 dataset = DOGGODataset(
                     self.test_files,
                     self.id_to_breed,
@@ -76,7 +81,12 @@ class DataLoaderManager:
         else:
             raise ValueError("dataset_type should be 'train', 'val', or 'test'")
 
-        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        dataloader = DataLoader(
+            dataset,
+            batch_size=self.batch_size,
+            shuffle=shuffle,
+            num_workers=self.num_workers,
+        )
         return dataloader
 
 
@@ -88,7 +98,7 @@ class DOGGODataset(Dataset):
         self.dataset_type = dataset_type
         self.transform = transform
 
-        #Create Enum of breeds
+        # Create Enum of breeds
         self.breeds_enum = create_dog_breed_enum(set(id_to_breed.values()))
 
     def __len__(self):
@@ -102,20 +112,25 @@ class DOGGODataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        if self.dataset_type == "test": #for later differences, like maybe not returning labels for future test
+        if (
+            self.dataset_type == "test"
+        ):  # for later differences, like maybe not returning labels for future test
             breed = self.id_to_breed[image_id]
             label = self.breeds_enum[breed.upper()].value
-            label = torch.tensor(label, dtype=torch.long)  #Convert the label to a tensor   
-            return {'image': image, 'label': label}   #turn it into a dict 
+            label = torch.tensor(
+                label, dtype=torch.long
+            )  # Convert the label to a tensor
+            return {"image": image, "label": label}  # turn it into a dict
         else:
             breed = self.id_to_breed[image_id]
             label = self.breeds_enum[breed.upper()].value
-            label = torch.tensor(label, dtype=torch.long)  #Convert the label to a tensor
-            return {'image': image, 'label': label}  #turn it into a dict 
+            label = torch.tensor(
+                label, dtype=torch.long
+            )  # Convert the label to a tensor
+            return {"image": image, "label": label}  # turn it into a dict
 
 
 def create_dog_breed_enum(breeds):
     return Enum(
         "Dog Breed", {breed.upper(): i for i, breed in enumerate(breeds, start=1)}
     )
-
