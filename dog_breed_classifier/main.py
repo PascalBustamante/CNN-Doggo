@@ -14,12 +14,12 @@ from train.train import Trainer
 
 
 RANDOM_SEED = 42
-BATCH_SIZE = 512
+BATCH_SIZE = 16
 EPOCHS = 40
 LEARNING_RATE = 1e-4
-NUM_CLASSES = 10  # for the 1- digits
+NUM_CLASSES = 121  
 PATCH_SIZE = 16
-IMG_SIZE = 244
+IMG_SIZE = 224
 IN_CHANNELS = 3 
 NUM_HEADS = 8
 DROPOUT = 0.001
@@ -72,17 +72,17 @@ lengths = [
 image_files_train, image_files_val = random_split(image_files_train_val, lengths)
 
 model = ViT(
-    NUM_PATCHES,
-    IMG_SIZE,
-    NUM_CLASSES,
-    PATCH_SIZE,
-    EMBED_DIM,
-    NUM_ENCODERS,
-    NUM_HEADS,
-    HIDDEN_DIM,
-    DROPOUT,
-    ACTIVAITION,
-    IN_CHANNELS,
+    num_patches=NUM_PATCHES,
+    img_size=IMG_SIZE,
+    num_classes=NUM_CLASSES,
+    patch_size=PATCH_SIZE,
+    embed_dim=EMBED_DIM,
+    num_encoders=NUM_ENCODERS,
+    num_heads=NUM_HEADS,
+    hidden_dim=HIDDEN_DIM,
+    dropout=DROPOUT,
+    activation=ACTIVAITION,
+    in_channels=IN_CHANNELS,
 ).to(device)
 
 DM = DataLoaderManager(

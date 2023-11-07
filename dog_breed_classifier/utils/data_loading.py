@@ -35,8 +35,8 @@ class DataLoaderManager:
         if dataset_type == "train":
             transform = transforms.Compose(
                 [
-                    #transforms.ToPILImage(),
-                    #transforms.RandomRotation(15),
+                    transforms.ToPILImage(),
+                    transforms.RandomRotation(15),
                     transforms.Resize((224, 224)),
                     transforms.ToTensor(),
                     transforms.Normalize(self.mean, self.std),
@@ -52,7 +52,7 @@ class DataLoaderManager:
         elif dataset_type in ["val", "test"]:
             transform = transforms.Compose(
                 [
-                    #transforms.ToPILImage(),
+                    transforms.ToPILImage(),
                     transforms.Resize((224, 224)),
                     transforms.ToTensor(),
                     transforms.Normalize(self.mean, self.std),

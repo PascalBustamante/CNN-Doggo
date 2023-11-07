@@ -47,7 +47,7 @@ class Trainer:
         for idx, img_label in enumerate(
             tqdm(self.train_dataloader, position=0, leave=True)
         ):
-            print(img_label["label"])
+            #print(img_label["label"])
             img = img_label["image"].float().to(self.device)
             #print(img)
             label = img_label["label"].type(torch.uint8).to(self.device)
@@ -93,7 +93,7 @@ class Trainer:
         start = timeit.default_timer()
         for epoch in tqdm(range(self.epochs), position=0, leave=True):
             train_loss, train_labels, train_preds = self.train_epoch()
-            val_loss, val_labels, val_preds = self.validate_epoch()
+            val_loss, val_labels, val_preds = self.val_epoch()
 
             print("-" * 30)
             print(f"Train Loss EPOCH {epoch+1}: {train_loss:.4f}")
