@@ -13,7 +13,11 @@ from tqdm import tqdm
 from PIL import Image
 from enum import Enum, auto
 
-from utils.data_exploration import calculate_mean_std
+from utils.data_exploration import calculate_mean_std, calculate_label_distribution
+from logger import Logger
+
+log_file_path = "logs/data_loading_log.txt"
+logger = Logger(__name__, log_file_path)
 
 
 class DataLoaderManager:
@@ -26,15 +30,25 @@ class DataLoaderManager:
         self.test_files = test_files
         self.id_to_breed = id_to_breed
         self.num_workers = num_workers
-        self.mean, self.std = self.calculate_mean_std(self.train_files)
+        self.mean, self.std = self.calculate_statistics(self.train_files)
 
-    def calculate_mean_std(self, image_files):
-        # function from utils
+        # Log the number of workers used for data loading
+        logger.info(f"Number of workers for data loading: {self.num_workers}")
+
+        # functions from utils
+
+    def calculate_statistics(self, image_files):
         return calculate_mean_std(image_files)
 
     ##build get_dataset(self, dataset_type)
 
     def get_dataloader(self, dataset_type):
+        logger.info(f"Creating data loader for dataset type: {dataset_type}")
+        loading_time = timeit.timeit(
+            stmt=lambda: self.load_data(dataset_type),  # Function that loads data
+            number=1,  # Execute the function once
+        )
+
         shuffle = True
         if dataset_type == "train":
             transform = transforms.Compose(
@@ -78,7 +92,23 @@ class DataLoaderManager:
                     transform=transform,
                 )
 
+            # Log the number of samples for the current dataset type
+        logger.info(f"Number of {dataset_type} samples: {len(dataset)}")
+
+        # Log dataset information (e.g., number of classes)
+        logger.info(f"Number of classes: {len(set(self.id_to_breed.values()))}")
+
+        # Log data preprocessing details (if applicable)
+        if dataset_type == "train":
+            logger.info("Data preprocessing details for training data:")
+            logger.info(
+                " - Data augmentation: RandomRotation(15)"
+            )  # make it a variable or change it
+
         else:
+            logger.error(
+                f"ValueError:{dataset_type} is not of type 'train', 'val', or 'test'"
+            )
             raise ValueError("dataset_type should be 'train', 'val', or 'test'")
 
         dataloader = DataLoader(
@@ -87,6 +117,10 @@ class DataLoaderManager:
             shuffle=shuffle,
             num_workers=self.num_workers,
         )
+
+        # Log the data loading time
+        logger.info(f"Data loading time for {dataset_type} data: {loading_time:.2f}s")
+
         return dataloader
 
 

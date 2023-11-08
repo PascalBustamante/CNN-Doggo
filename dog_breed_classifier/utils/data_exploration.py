@@ -32,9 +32,14 @@ def calculate_mean_std(image_files):
     return mean, std
 
 
-from logger import Logger
+def calculate_label_distribution(id_to_breed, image_files):
+    label_distribution = {}
 
-logger = Logger(__name__)
+    for image_file in image_files:
+        image_id = os.path.splitext(os.path.basename(image_file))[0]
+        label = id_to_breed[image_id]
 
-logger.info("testing, info")
-logger.error("testing, error")
+        if label is not None:
+            label_distribution[label] = label_distribution.get(label, 0) + 1
+
+    return label_distribution
