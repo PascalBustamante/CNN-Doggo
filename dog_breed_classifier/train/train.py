@@ -10,6 +10,13 @@ import random
 import timeit
 from tqdm import tqdm
 
+from utils.logger import Logger
+
+
+# Initialize the logger with a log file path
+log_file_path = "logs/training_log.txt"
+logger = Logger(__name__, log_file_path)
+
 
 class Trainer:
     def __init__(
@@ -22,6 +29,8 @@ class Trainer:
         adam_betas,
         learning_rate,
         weight_decay,
+        log_interval=10,
+        early_stopping_patience=5,
     ):
         self.model = model
         self.train_dataloader = train_dataloader
@@ -39,6 +48,11 @@ class Trainer:
             weight_decay=self.weight_decay,
         )
 
+        self.log_interval = log_interval
+        self.early_stopping_patience = early_stopping_patience
+        self.best_val_loss = float("inf")
+        self.no_improvement_count = 0
+
     def train_epoch(self):
         self.model.train()
         train_labels = []
@@ -47,9 +61,7 @@ class Trainer:
         for idx, img_label in enumerate(
             tqdm(self.train_dataloader, position=0, leave=True)
         ):
-            # print(img_label["label"])
             img = img_label["image"].float().to(self.device)
-            # print(img)
             label = img_label["label"].type(torch.uint8).to(self.device)
             y_pred = self.model(img)
             y_pred_label = torch.argmax(y_pred, dim=1)
@@ -65,6 +77,7 @@ class Trainer:
 
             train_running_loss += loss.item()
         train_loss = train_running_loss / (idx + 1)
+
         return train_loss, train_labels, train_preds
 
     def val_epoch(self):
@@ -87,6 +100,7 @@ class Trainer:
                 loss = self.criterion(y_pred, label)
                 val_running_loss += loss.item()
         val_loss = val_running_loss / (idx + 1)
+
         return val_loss, val_labels, val_preds
 
     def train(self):
@@ -95,17 +109,54 @@ class Trainer:
             train_loss, train_labels, train_preds = self.train_epoch()
             val_loss, val_labels, val_preds = self.val_epoch()
 
-            print("-" * 30)
-            print(f"Train Loss EPOCH {epoch+1}: {train_loss:.4f}")
-            print(f"Validation Loss EPOCH {epoch+1}: {val_loss:.4f}")
-            print(
-                f"Train Accuracy EPOCH {epoch+1}: {sum(1 for x,y in zip(train_preds, train_labels) if x == y) / len(train_labels):.4f}"
-            )
-            print(
-                f"Validation Accuracy EPOCH {epoch+1}: {sum(1 for x,y in zip(val_preds, val_labels) if x == y) / len(val_labels):.4f}"
-            )
-            print("-" * 30)
+            if val_loss < self.best_val_loss:
+                self.best_val_loss = val_loss
+                # Save the best model checkpoint
+                self.no_improvement_count = 0
+            else:
+                self.no_improvement_count += 1
+
+            if (epoch + 1) % self.log_interval == 0:
+                logger.info(f"Epoch [{epoch+1}/{self.epochs}]")
+                logger.info(f"Train Loss: {train_loss:.4f}")
+                logger.info(f"Validation Loss: {val_loss:.4f}")
+
+                # Log validation metrics
+                val_accuracy = sum(
+                    1 for x, y in zip(val_preds, val_labels) if x == y
+                ) / len(val_labels)
+                logger.info(f"Validation Accuracy: {val_accuracy:.4f}")
+
+                # Log learning rate
+                current_lr = self.optimizer.param_groups[0]["lr"]
+                logger.info(f"Learning Rate: {current_lr:.6f}")
+
+                # Log model checkpoints
+                if self.no_improvement_count == 0:
+                    logger.info("Model checkpoint saved (best so far)")
+
+                # Log epoch duration
+                elapsed_time = timeit.default_timer() - start
+                logger.info(f"Epoch Duration: {elapsed_time:.2f}s")
+
+                # Log batch processing
+                total_batches = len(self.train_dataloader)
+                logger.info(f"Total Batches: {total_batches}")
+                logger.info(
+                    f"Average Batch Processing Time: {elapsed_time / total_batches:.2f}s"
+                )
+
+                if self.no_improvement_count >= self.early_stopping_patience:
+                    # Log early stopping message (Early Stopping Messages)
+                    logger.info(
+                        "Early stopping triggered. No improvement for {self.early_stopping_patience} epochs."
+                    )
+                    break
+
+                logger.info("-" * 30)
+
         stop = timeit.default_timer()
-        print(f"Training Time: {stop-start:.2f}s")
+        logger.info(f"Training Time: {stop-start:.2f}s")
+        logger.info("Training finished")
 
         torch.cuda.empty_cache()

@@ -30,3 +30,11 @@ def calculate_mean_std(image_files):
     std /= len(image_files)
 
     return mean, std
+
+
+from logger import Logger
+
+logger = Logger(__name__)
+
+logger.info("testing, info")
+logger.error("testing, error")
