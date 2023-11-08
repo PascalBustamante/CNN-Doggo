@@ -4,6 +4,23 @@ import logging
 
 class Logger:
     def __init__(self, name, log_file=None):
+        """
+        Args:
+            name (str): Name of the logger.
+            log_file (str, optional): Path to a log file (if provided, logs will be saved to the file).
+
+        The logger is configured to log messages of INFO level or higher to both the console and the specified log file.
+
+        Usage:
+            # Create a logger with a given name and optionally a log file
+            logger = Logger(__name__, log_file="my_log.log")
+
+            # Log INFO level messages
+            logger.info("This is an informational message.")
+
+            # Log ERROR level messages
+            logger.error("This is an error message.")
+        """
         # Initialize a logger instance with a given name
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.INFO)  # Set the logging level to INFO
