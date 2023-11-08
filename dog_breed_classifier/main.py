@@ -7,13 +7,13 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Dataset, random_split
 import matplotlib.pyplot as plt
 
-
+# Import custom modules
 from models.model import ViT
 from utils.data_loading import DataLoaderManager, create_dog_breed_enum
 from train.train import Trainer
 from utils.logger import Logger
 
-
+# Define hyperparameters and configurations
 RANDOM_SEED = 42
 NUM_WORKERS = 8  # number of CPU cores for parallel data loading
 BATCH_SIZE = 16
@@ -33,6 +33,7 @@ NUM_ENCODERS = 4
 EMBED_DIM = (PATCH_SIZE**2) * IN_CHANNELS
 NUM_PATCHES = (IMG_SIZE // PATCH_SIZE) ** 2
 
+# Set random seed for various libraries
 random.seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
 torch.manual_seed(RANDOM_SEED)
@@ -41,6 +42,7 @@ torch.cuda.manual_seed_all(RANDOM_SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
+# Choose the device for training (CPU or GPU)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 log_file_path = "logs/main.txt"
@@ -60,7 +62,7 @@ transform = transforms.Compose(
     ]
 )
 
-# Load the dataset
+# Load image file paths, and labels
 image_files_train_val = glob.glob(
     r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\train/*.jpg"
 )
@@ -71,11 +73,12 @@ labels_df = pd.read_csv(
     r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\data\DOGGO\labels.csv"
 )
 
+# Create a list of unique dog breeds and a mapping of image IDs to breed labels
 breeds_list = labels_df["breed"].unique().tolist()
 id_to_breed = dict(zip(labels_df["id"], labels_df["breed"]))
 breeds = create_dog_breed_enum(breeds_list)
 
-# Split the dataset
+# Split the dataset into training and validation sets
 lengths = [
     int(0.9 * len(image_files_train_val)),
     len(image_files_train_val) - int(0.9 * len(image_files_train_val)),
@@ -105,6 +108,7 @@ DM = DataLoaderManager(
     num_workers=NUM_WORKERS,
 )
 
+# Get data loaders
 train_dataloader = DM.get_dataloader("train")
 val_dataloader = DM.get_dataloader("val")
 test_dataloader = DM.get_dataloader("test")
@@ -120,5 +124,5 @@ ViTTrainer = Trainer(
     weight_decay=ADAM_WEIGHT_DECAY,
 )
 
-
+# Train the ViT model
 ViTTrainer.train()

@@ -9,7 +9,7 @@ from PIL import Image
 
 
 def calculate_mean_std(image_files):
-    # Define the transformation
+    # Define the transformations
     transform = transforms.Compose(
         [
             transforms.ToTensor(),
