@@ -21,6 +21,17 @@ logger = Logger(__name__, log_file_path)
 
 
 class DataLoaderManager:
+    """
+    DataLoaderManager class for managing data loading and processing.
+
+    Args:
+        batch_size (int): Batch size for data loading.
+        train_files (list): List of training data files.
+        val_files (list): List of validation data files.
+        test_files (list): List of test data files.
+        id_to_breed (dict): Mapping of image IDs to dog breeds.
+        num_workers (int): Number of CPU cores dedicated to data loading.
+    """
     def __init__(
         self, batch_size, train_files, val_files, test_files, id_to_breed, num_workers
     ):
@@ -49,6 +60,15 @@ class DataLoaderManager:
         )
 
     def get_dataloader(self, dataset_type):
+        """
+        Create a data loader for a specific dataset type (train, val, or test).
+
+        Args:
+            dataset_type (str): Type of dataset (train, val, or test).
+
+        Returns:
+            DataLoader: DataLoader for the specified dataset type.
+        """
         logger.info(f"Creating data loader for dataset type: {dataset_type}")
         loading_time = timeit.timeit(
             stmt=lambda: self.load_data(dataset_type),  # Function that loads data
@@ -98,7 +118,7 @@ class DataLoaderManager:
                     transform=transform,
                 )
 
-            # Log the number of samples for the current dataset type
+        # Log the number of samples for the current dataset type
         logger.info(f"Number of {dataset_type} samples: {len(dataset)}")
 
         # Log dataset information (e.g., number of classes)
@@ -171,6 +191,7 @@ class DOGGODataset(Dataset):
 
 
 class DataPrefetcher:
+    # DataPrefetcher class for prefetching data using CUDA streams.
     def __init__(self, dataloader) -> None:
         self.dataloader = dataloader
         self.iterator = iter(dataloader)
