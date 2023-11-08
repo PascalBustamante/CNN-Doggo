@@ -30,17 +30,23 @@ class DataLoaderManager:
         self.test_files = test_files
         self.id_to_breed = id_to_breed
         self.num_workers = num_workers
-        self.mean, self.std = self.calculate_statistics(self.train_files)
+        self.mean, self.std, self.label_distribution = self.calculate_statistics(
+            self.train_files, self.id_to_breed
+        )
 
         # Log the number of workers used for data loading
         logger.info(f"Number of workers for data loading: {self.num_workers}")
+        # Log training dataset statistics
+        logger.info(f"Dataset Statistics for training data:")
+        logger.info(f" - Mean: {self.mean}")
+        logger.info(f" - Standard Deviation: {self.std}")
+        logger.info(f" - Label Distribution: {self.label_distribution}")
 
-        # functions from utils
-
-    def calculate_statistics(self, image_files):
-        return calculate_mean_std(image_files)
-
-    ##build get_dataset(self, dataset_type)
+    # functions from utils
+    def calculate_statistics(self, image_files, id_to_breed):
+        return calculate_mean_std(image_files), calculate_label_distribution(
+            id_to_breed, image_files
+        )
 
     def get_dataloader(self, dataset_type):
         logger.info(f"Creating data loader for dataset type: {dataset_type}")

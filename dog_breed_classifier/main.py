@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from models.model import ViT
 from utils.data_loading import DataLoaderManager, create_dog_breed_enum
 from train.train import Trainer
+from utils.logger import Logger
 
 
 RANDOM_SEED = 42
@@ -41,6 +42,15 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
+log_file_path = "logs/main.txt"
+logger = Logger(__name__, log_file_path)
+
+# Log hyperparameters
+logger.info(f"Batch size: {BATCH_SIZE}")
+logger.info(f"Number of epochs: {EPOCHS}")
+logger.info(f"Learning rate: {LEARNING_RATE}")
+logger.info(f"Device: {device}")
 
 # Define the transformations
 transform = transforms.Compose(
