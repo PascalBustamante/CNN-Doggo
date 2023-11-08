@@ -130,6 +130,33 @@ class DOGGODataset(Dataset):
             return {"image": image, "label": label}  # turn it into a dict
 
 
+class DataPrefetcher:
+    def __init__(self, dataloader) -> None:
+        self.dataloader = dataloader
+        self.iterator = iter(dataloader)
+        self.stream = torch.cuda.Stream()
+        self.next_data = None
+
+    def preload(self):
+        try:
+            self.next_data = next(self.iterator)
+        except StopIteration:
+            self.next_data = None
+            return
+
+        with torch.cuda.stream(self.stream):
+            for key, value in self.next_data.items():
+                if isinstance(value, torch.Tensor):
+                    self.next_data[key] = value.cuda(non_blocking=True)
+            self.next_data["image"] = self.next_data["image"].cuda(non_blocking=True)
+
+    def next(self):
+        torch.cuda.current_stream().wait_stream(self.stream)
+        data = self.next_data
+        self.preload()
+        return data
+
+
 def create_dog_breed_enum(breeds):
     return Enum(
         "Dog Breed", {breed.upper(): i for i, breed in enumerate(breeds, start=1)}
