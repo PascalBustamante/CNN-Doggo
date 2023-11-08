@@ -32,6 +32,7 @@ class DataLoaderManager:
         id_to_breed (dict): Mapping of image IDs to dog breeds.
         num_workers (int): Number of CPU cores dedicated to data loading.
     """
+
     def __init__(
         self, batch_size, train_files, val_files, test_files, id_to_breed, num_workers
     ):

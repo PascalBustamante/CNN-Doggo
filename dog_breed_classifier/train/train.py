@@ -19,6 +19,30 @@ logger = Logger(__name__, log_file_path)
 
 
 class Trainer:
+    """
+    Trainer for training ViT/CNN models.
+
+    Args:
+        model (nn.Module): The image model to be trained.
+        train_dataloader (DataLoader): DataLoader for the training dataset.
+        val_dataloader (DataLoader): DataLoader for the validation dataset.
+        device (str): Device to use for training (e.g., 'cuda' or 'cpu').
+        epochs (int): Number of training epochs.
+        adam_betas (tuple): Coefficients for computing running averages of gradient and its square.
+        learning_rate (float): Learning rate for optimization.
+        weight_decay (float): L2 regularization strength.
+        log_interval (int): Interval for logging training progress.
+        early_stopping_patience (int): Number of epochs with no improvement to trigger early stopping.
+
+    Attributes:
+        device (str): Device to use for training.
+        adam_betas (tuple): Coefficients for Adam optimizer.
+        criterion (nn.Module): Loss function for training.
+        optimizer (optim.Optimizer): Optimizer for updating model parameters.
+        best_val_loss (float): Best validation loss (to help with overfitting).
+        no_improvement_count (int): Count of epochs with no improvement.
+    """
+
     def __init__(
         self,
         model,
@@ -81,6 +105,8 @@ class Trainer:
         return train_loss, train_labels, train_preds
 
     def val_epoch(self):
+        # Validate the model for one epoch.
+
         self.model.eval()
         val_labels = []
         val_preds = []
@@ -104,6 +130,8 @@ class Trainer:
         return val_loss, val_labels, val_preds
 
     def train(self):
+        # Perform the model training for the specified number of epochs
+
         start = timeit.default_timer()
         for epoch in tqdm(range(self.epochs), position=0, leave=True):
             train_loss, train_labels, train_preds = self.train_epoch()
