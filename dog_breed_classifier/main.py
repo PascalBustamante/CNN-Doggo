@@ -4,7 +4,7 @@ import glob
 import numpy as np
 import pandas as pd
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import random_split
 import matplotlib.pyplot as plt
 
 # Import custom modules

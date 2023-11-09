@@ -6,3 +6,5 @@ instance
 *.flaskenv
 config.py
 data/
+reports/
+logs/
