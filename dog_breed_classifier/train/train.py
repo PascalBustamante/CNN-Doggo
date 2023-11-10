@@ -11,6 +11,7 @@ import timeit
 from tqdm import tqdm
 from datetime import datetime
 
+from checkpoint import save_checkpoint, load_checkpoint
 from utils.logger import Logger
 
 
@@ -42,7 +43,9 @@ class Trainer:
         optimizer (optim.Optimizer): Optimizer for updating model parameters.
         best_val_loss (float): Best validation loss (to help with overfitting).
         no_improvement_count (int): Count of epochs with no improvement.
-        val_losses (list): [] Store validation losses during training
+        val_losses (list): Store validation losses during training
+        save_interval(int): Number of epochs before checkpoint save 
+
     """
 
     def __init__(
@@ -57,6 +60,7 @@ class Trainer:
         weight_decay,
         log_interval=10,
         early_stopping_patience=5,
+        save_interval=3
     ):
         self.model = model
         self.train_dataloader = train_dataloader
@@ -79,6 +83,7 @@ class Trainer:
         self.best_val_loss = float("inf")
         self.no_improvement_count = 0
         self.val_losses = []  # Store validation losses during training
+        self.save_interval = save_interval  # Not implemented
 
     def train_epoch(self):
         self.model.train()
@@ -129,7 +134,7 @@ class Trainer:
                 loss = self.criterion(y_pred, label)
                 val_running_loss += loss.item()
         val_loss = val_running_loss / (idx + 1)
-        self.val_losses.append(val_loss)  # Store the validation loss
+        self.val_losses.append(val_loss)  # Store the validation loss, for later use
 
         return val_loss, val_labels, val_preds
 
@@ -144,6 +149,12 @@ class Trainer:
             if val_loss < self.best_val_loss:
                 self.best_val_loss = val_loss
                 # Save the best model checkpoint
+                save_checkpoint(
+                    self.model,
+                    optimizer=self.optimizer,
+                    loss=train_loss,
+                    filename=r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\train\checkpoints\best_model.pth",
+                )
                 self.no_improvement_count = 0
             else:
                 self.no_improvement_count += 1
@@ -193,7 +204,7 @@ class Trainer:
 
         # Name the model with time stamp
         timestamp = datetime.now().strftime("%Y-%m-%d_%H")
-        filename = f'C:\Users\pasca\CNN Doggo\dog_breed_classifier\trained_models\ViT.v1{timestamp}.pth'
+        filename = rf"C:\Users\pasca\CNN Doggo\dog_breed_classifier\trained_models\ViT.v1{timestamp}.pth"
 
         # Save the final model
         torch.save(self.model.state_dict(), filename)
