@@ -36,7 +36,7 @@ class PatchEmbedding(nn.Module):
         super().__init__()
         # Define a patcher using a convolutional layer
         self.patcher = nn.Sequential(
-            nn.Conv2d(
+            nn.Conv2d(  # Look into swapping it with nn.Conv3d
                 in_channels=in_channels,
                 out_channels=embed_dim,
                 kernel_size=patch_size,

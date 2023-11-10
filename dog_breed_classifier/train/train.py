@@ -9,6 +9,7 @@ import numpy as np
 import random
 import timeit
 from tqdm import tqdm
+from datetime import datetime
 
 from utils.logger import Logger
 
@@ -41,6 +42,7 @@ class Trainer:
         optimizer (optim.Optimizer): Optimizer for updating model parameters.
         best_val_loss (float): Best validation loss (to help with overfitting).
         no_improvement_count (int): Count of epochs with no improvement.
+        val_losses (list): [] Store validation losses during training
     """
 
     def __init__(
@@ -76,6 +78,7 @@ class Trainer:
         self.early_stopping_patience = early_stopping_patience
         self.best_val_loss = float("inf")
         self.no_improvement_count = 0
+        self.val_losses = []  # Store validation losses during training
 
     def train_epoch(self):
         self.model.train()
@@ -126,10 +129,11 @@ class Trainer:
                 loss = self.criterion(y_pred, label)
                 val_running_loss += loss.item()
         val_loss = val_running_loss / (idx + 1)
+        self.val_losses.append(val_loss)  # Store the validation loss
 
         return val_loss, val_labels, val_preds
 
-    def train(self):
+    def train(self, resume_checkpoint=None):
         # Perform the model training for the specified number of epochs
 
         start = timeit.default_timer()
@@ -187,4 +191,12 @@ class Trainer:
         logger.info(f"Training Time: {stop-start:.2f}s")
         logger.info("Training finished")
 
+        # Name the model with time stamp
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H")
+        filename = f'C:\Users\pasca\CNN Doggo\dog_breed_classifier\trained_models\ViT.v1{timestamp}.pth'
+
+        # Save the final model
+        torch.save(self.model.state_dict(), filename)
+
+        # Free memory
         torch.cuda.empty_cache()

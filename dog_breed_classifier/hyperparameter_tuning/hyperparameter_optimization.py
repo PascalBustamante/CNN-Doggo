@@ -36,6 +36,11 @@ def objective(trial, data_subset_ratio, image_files):
     BATCH_SIZE = trial.suggest_categorical("batch_size", [8, 16, 32])
     NUM_HEADS = trial.suggest_int("num_heads", 4, 8, 16)
 
+    # Log additional information for the trial
+    trial.set_user_attr("batch_size", BATCH_SIZE)
+    trial.set_user_attr("learning_rate", LEARNING_RATE)
+    trial.set_user_attr("num_heads", NUM_HEADS)
+
     # Set random seed for various libraries
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
@@ -52,6 +57,7 @@ def objective(trial, data_subset_ratio, image_files):
     logger = Logger(__name__, log_file_path)
 
     # Log hyperparameters
+    logger.info(f"Trial {trial.number}")
     logger.info(f"Batch size: {BATCH_SIZE}")
     logger.info(f"Number of epochs: {EPOCHS}")
     logger.info(f"Learning rate: {LEARNING_RATE}")
@@ -119,7 +125,6 @@ def objective(trial, data_subset_ratio, image_files):
     # Get data loaders
     train_dataloader = DM.get_dataloader("train")
     val_dataloader = DM.get_dataloader("val")
-    test_dataloader = DM.get_dataloader("test")
 
     ViTTrainer = Trainer(
         model=model,
@@ -135,8 +140,8 @@ def objective(trial, data_subset_ratio, image_files):
     # Train the ViT model
     ViTTrainer.train()
 
-    # Evaluate your model on the validation set and get the validation loss
-    validation_loss = evaluate_model(model, val_dataloader)
+    # Access the last validation loss from the Trainer class
+    last_val_loss = ViTTrainer.val_losses[-1]
 
     # Return the metric to be optimized (e.g., validation loss)
-    return validation_loss
+    return last_val_loss
