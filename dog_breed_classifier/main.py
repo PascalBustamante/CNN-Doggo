@@ -1,6 +1,7 @@
 import torch
 import random
 import glob
+import optuna
 import numpy as np
 import pandas as pd
 from torchvision import datasets, transforms
@@ -9,9 +10,11 @@ import matplotlib.pyplot as plt
 
 # Import custom modules
 from models.model import ViT
+from hyperparameter_tuning.hyperparameter_optimization import objective
 from utils.data_loading import DataLoaderManager, create_dog_breed_enum
 from train.train import Trainer
 from utils.logger import Logger
+from cli.parser import parse_arguments
 
 # Define hyperparameters and configurations
 RANDOM_SEED = 42
@@ -54,7 +57,7 @@ logger.info(f"Number of epochs: {EPOCHS}")
 logger.info(f"Learning rate: {LEARNING_RATE}")
 logger.info(f"Device: {device}")
 
-# Define the transformations
+# Define the transformations, not in use
 transform = transforms.Compose(
     [
         transforms.Resize((224, 224)),  # resize images to 224x224
@@ -126,3 +129,23 @@ ViTTrainer = Trainer(
 
 # Train the ViT model
 ViTTrainer.train()
+
+def main():
+    args = parse_arguments()
+
+    if args.mode == 'train':
+        # Run your regular training loop
+        pass
+    elif args.mode == 'optimize':
+        # Create an Optuna study object
+        study = optuna.create_study(direction='minimize')
+        # Optimize your objective function
+        study.optimize(lambda trial:objective(trial, data_subset_ratio=0.1), n_trials=100)  # Take 10% of testing set
+        # Get the best hyperparameters
+        best_params = study.best_params 
+    elif args.mode == 'evaluate':
+        # Run evaluation logic
+        pass
+
+if __name__ == "__main__":
+    main()

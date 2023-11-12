@@ -82,7 +82,7 @@ class Trainer:
         self.early_stopping_patience = early_stopping_patience
         self.best_val_loss = float("inf")
         self.no_improvement_count = 0
-        self.val_losses = []  # Store validation losses during training
+        self.val_losses = []  # Store validation losses during training, used in hyperparameter tuning
         self.save_interval = save_interval  # Not implemented
 
     def train_epoch(self):
