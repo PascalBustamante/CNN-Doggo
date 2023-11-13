@@ -14,7 +14,7 @@ from PIL import Image
 from enum import Enum, auto
 
 from utils.data_exploration import calculate_mean_std, calculate_label_distribution
-from logger import Logger
+from utils.logger import Logger
 
 log_file_path = "logs/data_loading_log.txt"
 logger = Logger(__name__, log_file_path)
@@ -41,9 +41,12 @@ class DataLoaderManager:
         self.val_files = val_files
         self.test_files = test_files
         self.id_to_breed = id_to_breed
-        self.num_workers = num_workers
-        self.mean, self.std, self.label_distribution = self.calculate_statistics(
-            self.train_files, self.id_to_breed
+        self.num_workers = 0
+        self.mean = 0 
+        self.std = 0
+        self.label_distribution = {}
+        self.calculate_statistics(
+            image_files=self.train_files, id_to_breed=self.id_to_breed
         )
 
         # Log the number of workers used for data loading
@@ -56,7 +59,8 @@ class DataLoaderManager:
 
     # functions from utils
     def calculate_statistics(self, image_files, id_to_breed):
-        return calculate_mean_std(image_files), calculate_label_distribution(
+        self.mean, self.std = calculate_mean_std(image_files) 
+        self.label_distribution = calculate_label_distribution(
             id_to_breed, image_files
         )
 
@@ -71,16 +75,16 @@ class DataLoaderManager:
             DataLoader: DataLoader for the specified dataset type.
         """
         logger.info(f"Creating data loader for dataset type: {dataset_type}")
-        loading_time = timeit.timeit(
-            stmt=lambda: self.load_data(dataset_type),  # Function that loads data
+        '''loading_time = timeit.timeit(
+            stmt=lambda: self.preload(dataset_type),  # Function that loads data
             number=1,  # Execute the function once
-        )
+        )'''
 
         shuffle = True
         if dataset_type == "train":
             transform = transforms.Compose(
                 [
-                    transforms.ToPILImage(),
+                    #transforms.ToPILImage(),
                     transforms.RandomRotation(15),
                     transforms.Resize((224, 224)),
                     transforms.ToTensor(),
@@ -97,7 +101,7 @@ class DataLoaderManager:
         elif dataset_type in ["val", "test"]:
             transform = transforms.Compose(
                 [
-                    transforms.ToPILImage(),
+                    #transforms.ToPILImage(),
                     transforms.Resize((224, 224)),
                     transforms.ToTensor(),
                     transforms.Normalize(self.mean, self.std),
@@ -126,7 +130,7 @@ class DataLoaderManager:
         logger.info(f"Number of classes: {len(set(self.id_to_breed.values()))}")
 
         # Log data preprocessing details (if applicable)
-        if dataset_type == "train":
+        if dataset_type in ["train", "val", "test"]: 
             logger.info("Data preprocessing details for training data:")
             logger.info(
                 " - Data augmentation: RandomRotation(15)"
@@ -146,9 +150,16 @@ class DataLoaderManager:
         )
 
         # Log the data loading time
-        logger.info(f"Data loading time for {dataset_type} data: {loading_time:.2f}s")
+       # logger.info(f"Data loading time for {dataset_type} data: {loading_time:.2f}s")
 
-        return dataloader
+         # Wrap the DataLoader with DataPrefetcher
+        #prefetcher = DataPrefetcher(dataloader)
+        #prefetcher.preload()
+
+        # Log the data loading time
+        #logger.info(f"Data loading time for {dataset_type} data: {loading_time:.2f}s")
+
+        return dataloader 
 
 
 class DOGGODataset(Dataset):

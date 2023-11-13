@@ -11,7 +11,7 @@ import timeit
 from tqdm import tqdm
 from datetime import datetime
 
-from checkpoint import save_checkpoint, load_checkpoint
+from train.checkpoint import save_checkpoint, load_checkpoint
 from utils.logger import Logger
 
 
@@ -82,6 +82,7 @@ class Trainer:
         self.early_stopping_patience = early_stopping_patience
         self.best_val_loss = float("inf")
         self.no_improvement_count = 0
+        self.train_running_loss = 0
         self.val_losses = (
             []
         )  # Store validation losses during training, used in hyperparameter tuning
@@ -144,7 +145,6 @@ class Trainer:
         # Perform the model training for the specified number of epochs
 
         start_epoch = 0
-        start_loss = None
 
         if resume_checkpoint:
             loaded_model, loaded_optimizer, start_epoch, start_loss = load_checkpoint(
@@ -152,6 +152,7 @@ class Trainer:
             )
             self.model = loaded_model
             self.optimizer = loaded_optimizer
+            self.train_running_loss = start_loss
         # Optionally adjust learning rate scheduler
         # for _ in range(start_epoch):
         #   scheduler.step()
@@ -159,6 +160,7 @@ class Trainer:
         start = timeit.default_timer()
         for epoch in tqdm(range(start_epoch,self.epochs), position=0, leave=True):
             train_loss, train_labels, train_preds = self.train_epoch()
+            self.train_running_loss += train_loss
             val_loss, val_labels, val_preds = self.val_epoch()
 
             if val_loss < self.best_val_loss:
@@ -172,7 +174,7 @@ class Trainer:
                 save_checkpoint(
                     self.model,
                     optimizer=self.optimizer,
-                    loss=train_loss,
+                    loss=self.train_running_loss,
                     filename=filename,
                 )
 
@@ -184,7 +186,7 @@ class Trainer:
 
             if (epoch + 1) % self.log_interval == 0:
                 logger.info(f"Epoch [{epoch+1}/{self.epochs}]")
-                logger.info(f"Train Loss: {train_loss:.4f}")
+                logger.info(f"Train Loss: {train_loss:.4f}; Train Running Loss: {self.train_running_loss:.4f}")
                 logger.info(f"Validation Loss: {val_loss:.4f}")
 
                 # Log validation metrics
