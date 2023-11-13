@@ -2,6 +2,7 @@ import torch
 import random
 import glob
 import optuna
+import json
 import numpy as np
 import pandas as pd
 from torchvision import datasets, transforms
@@ -137,12 +138,42 @@ def main():
         # Run your regular training loop
         pass
     elif args.mode == 'optimize':
+        study_results_path = "C:\Users\pasca\CNN Doggo\dog_breed_classifier\hyperparameter_tuning\study_results"
+        study_results_body = {
+            "RANDOM_SEED": 42,
+            "NUM_WORKERS": 8,  # number of CPU cores for parallel data loading
+            "EPOCHS": 40,
+            "NUM_CLASSES": 121,
+            "PATCH_SIZE": 16,
+            "IMG_SIZE": 224,
+            "IN_CHANNELS": 3,
+            "DROPOUT": 0.001,
+            "HIDDEN_DIM": 768,
+            "ADAM_WEIGHT_DECAY": 0,
+            "ADAM_BETAS": (0.9, 0.999),
+            "ACTIVAITION": "gelu",
+            "NUM_ENCODERS": 4,
+            #"EMBED_DIM": (PATCH_SIZE**2) * IN_CHANNELS,
+            #"NUM_PATCHES": (IMG_SIZE // PATCH_SIZE) ** 2,
+        }
+        study_results_body["EMBED_DIM"] = (study_results_body["PATCH_SIZE"]**2)*study_results_body["IN_CHANNELS"]
+        study_results_body["NUM_PATCHES"] = (study_results_body["IMG_SIZE"]//study_results_body["PATCH_SIZE"])
+
         # Create an Optuna study object
         study = optuna.create_study(direction='minimize')
         # Optimize your objective function
         study.optimize(lambda trial:objective(trial, data_subset_ratio=0.1), n_trials=100)  # Take 10% of testing set
         # Get the best hyperparameters
-        best_params = study.best_params 
+        best_params = study.best_params
+        all_params = {
+            **study_results_body,
+            **best_params,
+        }
+        with open(study_results_path, 'w') as f:
+            json.dump(all_params, f)
+
+
+
     elif args.mode == 'evaluate':
         # Run evaluation logic
         pass

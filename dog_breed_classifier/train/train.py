@@ -44,7 +44,7 @@ class Trainer:
         best_val_loss (float): Best validation loss (to help with overfitting).
         no_improvement_count (int): Count of epochs with no improvement.
         val_losses (list): Store validation losses during training
-        save_interval(int): Number of epochs before checkpoint save 
+        save_interval(int): Number of epochs before checkpoint save
 
     """
 
@@ -60,7 +60,7 @@ class Trainer:
         weight_decay,
         log_interval=10,
         early_stopping_patience=5,
-        save_interval=3
+        save_interval=3,
     ):
         self.model = model
         self.train_dataloader = train_dataloader
@@ -82,7 +82,9 @@ class Trainer:
         self.early_stopping_patience = early_stopping_patience
         self.best_val_loss = float("inf")
         self.no_improvement_count = 0
-        self.val_losses = []  # Store validation losses during training, used in hyperparameter tuning
+        self.val_losses = (
+            []
+        )  # Store validation losses during training, used in hyperparameter tuning
         self.save_interval = save_interval  # Not implemented
 
     def train_epoch(self):
@@ -141,20 +143,41 @@ class Trainer:
     def train(self, resume_checkpoint=None):
         # Perform the model training for the specified number of epochs
 
+        start_epoch = 0
+        start_loss = None
+
+        if resume_checkpoint:
+            loaded_model, loaded_optimizer, start_epoch, start_loss = load_checkpoint(
+                self.model, self.optimizer, resume_checkpoint
+            )
+            self.model = loaded_model
+            self.optimizer = loaded_optimizer
+        # Optionally adjust learning rate scheduler
+        # for _ in range(start_epoch):
+        #   scheduler.step()
+
         start = timeit.default_timer()
-        for epoch in tqdm(range(self.epochs), position=0, leave=True):
+        for epoch in tqdm(range(start_epoch,self.epochs), position=0, leave=True):
             train_loss, train_labels, train_preds = self.train_epoch()
             val_loss, val_labels, val_preds = self.val_epoch()
 
             if val_loss < self.best_val_loss:
                 self.best_val_loss = val_loss
                 # Save the best model checkpoint
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H")
+                filename = rf"C:\Users\pasca\CNN Doggo\dog_breed_classifier\train\checkpoints\{timestamp}_best_model.pth"
+
+                logger.info(f"Better model found: {val_loss:.4f} < {self.best_val_loss:.4f}. Saving best model")
+
                 save_checkpoint(
                     self.model,
                     optimizer=self.optimizer,
                     loss=train_loss,
-                    filename=r"C:\Users\pasca\CNN Doggo\dog_breed_classifier\train\checkpoints\best_model.pth",
+                    filename=filename,
                 )
+
+                logger.info("Best model saved")
+
                 self.no_improvement_count = 0
             else:
                 self.no_improvement_count += 1
@@ -189,12 +212,22 @@ class Trainer:
                     f"Average Batch Processing Time: {elapsed_time / total_batches:.2f}s"
                 )
 
+                if (epoch + 1) % self.save_interval == 0:
+                    # Save checkpoint at regular intervals
+                    logger.info(f"Saving checkpoint at {epoch+1}")
+
+                    timestamp = datetime.now().strftime("%Y-%m-%d_%H")
+                    filename = rf"C:\Users\pasca\CNN Doggo\dog_breed_classifier\train\checkpoints\{timestamp}_{epoch+1}.pth"
+                    save_checkpoint(self.model, self.optimizer, epoch, train_loss, filename)
+                    logger.info("Saving successful")
+
                 if self.no_improvement_count >= self.early_stopping_patience:
                     # Log early stopping message (Early Stopping Messages)
                     logger.info(
                         "Early stopping triggered. No improvement for {self.early_stopping_patience} epochs."
                     )
                     break
+                
 
                 logger.info("-" * 30)
 

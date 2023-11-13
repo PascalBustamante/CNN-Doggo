@@ -13,32 +13,6 @@ from utils.data_loading import DataLoaderManager, create_dog_breed_enum
 from utils.logger import Logger
 
 
-class HyperparameterOptimizer:
-    def __init__(self) -> None:
-        # Define static hyperparameters
-        self.static_hyperparameters = {
-            "RANDOM_SEED": 42,
-            "NUM_WORKERS": 8,  # number of CPU cores for parallel data loading
-            "EPOCHS": 40,
-            "NUM_CLASSES": 121,
-            "PATCH_SIZE": 16,
-            "IMG_SIZE": 224,
-            "IN_CHANNELS": 3,
-            "DROPOUT": 0.001,
-            "HIDDEN_DIM": 768,
-            "ADAM_WEIGHT_DECAY": 0,
-            "ADAM_BETAS": (0.9, 0.999),
-            "ACTIVAITION": "gelu",
-            "NUM_ENCODERS": 4,
-            "EMBED_DIM": (PATCH_SIZE**2) * IN_CHANNELS,
-            "NUM_PATCHES": (IMG_SIZE // PATCH_SIZE) ** 2,
-        }
-        "EMBED_DIM" "NUM_PATCHES"
-
-
-
-
-
 def objective(trial, data_subset_ratio, image_files):
     # Static hyperparameters
     RANDOM_SEED = 42
@@ -89,7 +63,7 @@ def objective(trial, data_subset_ratio, image_files):
     logger.info(f"Learning rate: {LEARNING_RATE}")
     logger.info(f"Device: {device}")
 
-    # Define the transformations, not in use 
+    # Define the transformations, not in use
     transform = transforms.Compose(
         [
             transforms.Resize((224, 224)),  # resize images to 224x224
